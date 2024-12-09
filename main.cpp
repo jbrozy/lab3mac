@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "shader.h"
 #include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -55,14 +56,35 @@ static void cursor_position_callback(GLFWwindow *window, double xpos,
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mods) {
-  if (action != 0) // nur beim HinunterdrC<cken einer Taste
+  if (action != 0) // nur beim Hinunterdrücken einer Taste
   {
     if (key == GLFW_KEY_A) // Wenn diese Taste "A" war
     {
-      if (mods == 1)           // Wenn Shift zusC$tzlich gehalten ist
-        AMBIENT_FACTOR += .1f; // ambienten Faktor erhC6hen
+      if (mods == 1)           // Wenn Shift zusätzlich gehalten ist
+        AMBIENT_FACTOR += .1f; // ambienten Faktor erhöhen
       else
         AMBIENT_FACTOR -= .1f; // ambienten Faktor senken
+    }
+    if (key == GLFW_KEY_D) // Wenn diese Taste "A" war
+    {
+      if (mods == 1)             // Wenn Shift zusätzlich gehalten ist
+        DIFFUSION_FACTOR += .1f; // ambienten Faktor erhöhen
+      else
+        DIFFUSION_FACTOR -= .1f; // ambienten Faktor senken
+    }
+    if (key == GLFW_KEY_S) // Wenn diese Taste "A" war
+    {
+      if (mods == 1)            // Wenn Shift zusätzlich gehalten ist
+        SPECULAR_FACTOR += .1f; // ambienten Faktor erhöhen
+      else
+        SPECULAR_FACTOR -= .1f; // ambienten Faktor senken
+    }
+    if (key == GLFW_KEY_G) // Wenn diese Taste "A" war
+    {
+      if (mods == 1)              // Wenn Shift zusätzlich gehalten ist
+        SHININESS_FACTOR += 1.0f; // ambienten Faktor erhöhen
+      else
+        SHININESS_FACTOR -= 1.0f; // ambienten Faktor senken
     }
   }
 }
@@ -233,61 +255,10 @@ int main() {
   std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
 
   // Create and compile shaders
-  const char *vertexShaderSource = R"(
-#version 410
+  const char *vertexShaderSource = read_from_file("assets/vertexShader.glsl");
 
-uniform mat4 matrix;
-uniform vec3 lightDir;
-
-in vec3 color;
-in vec3 position;
-in vec3 normals;
-
-out vec3 colorForFragmentShader;
-out vec3 outNormals;
-
-out vec3 fragPosition;
-out vec3 lightDirection;
-
-void main()
-{
-    gl_Position = matrix * vec4(position, 1.0);
-    fragPosition = (matrix * vec4(position, 1.0)).xyz;
-
-    colorForFragmentShader = color;
-    outNormals = (matrix * vec4(normals, 1.0)).xyz;
-    lightDirection = (matrix * vec4(lightDir, 1.0)).xyz;
-}
-    )";
-
-  const char *fragmentShaderSource = R"(
-#version 410
-
-uniform float ambientFactor;
-uniform float diffuseFactor;
-uniform int shininessFactor;
-uniform float specularFactor;
-
-out vec4 colorOfMyChoice;
-
-in vec3 outNormals;
-in vec3 fragPosition;
-in vec3 colorForFragmentShader;
-
-uniform vec3 lightPos = vec3(0.0, 0.0, 1.0);
-uniform vec3 cameraPosition = vec3(0.0, 0.0, 1.0);
-
-void main()
-{
-    vec3 lightDir = normalize(lightPos - fragPosition);
-    vec3 viewDir = normalize(cameraPosition - fragPosition);
-
-    vec3 reflectDir = reflect(-lightDir, outNormals);
-    float diffuse = (max(dot(outNormals, lightDir), 0.0)) * max(diffuseFactor, 0.0);
-    float specular = pow(max(dot(viewDir, reflectDir), 0.0), max(shininessFactor, 1.0)) * max(specularFactor, 0.0);
-    colorOfMyChoice = vec4((ambientFactor + diffuse + specular) * colorForFragmentShader, 1.0);
-}
-    )";
+  const char *fragmentShaderSource =
+      read_from_file("assets/fragmentShader.glsl");
 
   complete_shader_program = glCreateProgram();
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -313,7 +284,7 @@ void main()
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  // FC<gen Sie vor dem Buffer-Setup hinzu:
+  // Fügen Sie vor dem Buffer-Setup hinzu:
   GLuint vao;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);

@@ -5,6 +5,8 @@ project(
     LANGUAGES CXX
 )
 
+file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 set(CMAKE_CXX_STANDARD 17)
 set(CXX_FLAGS "-Wall -stdlib=libc++")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
