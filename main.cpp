@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "LadeBMP.h"
 #include "shader.h"
 #include <chrono>
 #include <glm/glm.hpp>
@@ -156,7 +157,7 @@ void checkProgramLinking(GLuint program) {
 int main() {
   GLuint vertex_buffer, vertex_shader, fragment_shader, complete_shader_program;
   GLint matrix_access, ambient, diffusion, specular, shininess, position_access,
-      color_access, normal_access, light_dir_access;
+      color_access, normal_access, light_dir_access, uv_access;
 
   std::cout << "Initializing GLFW..." << std::endl;
   if (!glfwInit()) {
@@ -193,7 +194,6 @@ int main() {
   glm::vec3 back{0, 0, -1};
 
   // Left side
-
   vertices[0] = vertex(cubeEdges[2], leftside);
   vertices[1] = vertex(cubeEdges[1], leftside);
   vertices[2] = vertex(cubeEdges[0], leftside);
@@ -203,7 +203,6 @@ int main() {
   vertices[5] = vertex(cubeEdges[0], leftside);
 
   // Front des Dreiceck
-
   vertices[6] = vertex(cubeEdges[4], front);
   vertices[7] = vertex(cubeEdges[0], front);
   vertices[8] = vertex(cubeEdges[3], front);
@@ -213,7 +212,6 @@ int main() {
   vertices[11] = vertex(cubeEdges[5], front);
 
   // top side
-
   vertices[12] = vertex(cubeEdges[4], top);
   vertices[13] = vertex(cubeEdges[0], top);
   vertices[14] = vertex(cubeEdges[1], top);
@@ -223,7 +221,6 @@ int main() {
   vertices[17] = vertex(cubeEdges[1], top);
 
   // back
-
   vertices[18] = vertex(cubeEdges[2], back);
   vertices[19] = vertex(cubeEdges[6], back);
   vertices[20] = vertex(cubeEdges[1], back);
@@ -233,7 +230,6 @@ int main() {
   vertices[23] = vertex(cubeEdges[1], back);
 
   // right side
-
   vertices[24] = vertex(cubeEdges[6], rightside);
   vertices[25] = vertex(cubeEdges[5], rightside);
   vertices[26] = vertex(cubeEdges[4], rightside);
@@ -243,7 +239,6 @@ int main() {
   vertices[29] = vertex(cubeEdges[7], rightside);
 
   // bottom side
-
   vertices[30] = vertex(cubeEdges[5], bottom);
   vertices[31] = vertex(cubeEdges[3], bottom);
   vertices[32] = vertex(cubeEdges[2], bottom);
@@ -319,6 +314,25 @@ int main() {
   position_access = glGetAttribLocation(complete_shader_program, "position");
   color_access = glGetAttribLocation(complete_shader_program, "color");
   normal_access = glGetAttribLocation(complete_shader_program, "normals");
+  uv_access = glGetAttribLocation(complete_shader_program, "texCoords");
+
+  GLuint texture;
+  int picture_width, picture_height;
+  auto const pictureData =
+      loadBMP24("assets/Cube.bmp", &picture_width, &picture_height);
+
+  glGenTextures(1, &texture);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, picture_width, picture_height, 0,
+               GL_BGR, GL_UNSIGNED_BYTE, pictureData);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+  delete[] pictureData;
+  glGenerateMipmap(GL_TEXTURE_2D);
+  GLuint textureId =
+      glGetUniformLocation(complete_shader_program, "textureSampler");
 
   // Die Daten fC<r Position und Farbe werden dem Shader mitgeteilt
   glEnableVertexAttribArray(position_access);
@@ -332,6 +346,10 @@ int main() {
   glEnableVertexAttribArray(normal_access);
   glVertexAttribPointer(normal_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
                         (void *)(sizeof(float) * 6));
+
+  glEnableVertexAttribArray(uv_access);
+  glVertexAttribPointer(uv_access, 2, GL_FLOAT, GL_FALSE, sizeof(vertex),
+                        (void *)(sizeof(float) * 9));
 
   // Aufbau und Cbermittlung des Vertex-Buffers
   glGenBuffers(1, &vertex_buffer);
@@ -385,17 +403,14 @@ int main() {
     GL_CHECK(glUniform1f(specular,
                          SPECULAR_FACTOR)); // Der ambiente Faktor wird in das
                                             // Shader-Programm C<bertragen
+    GL_CHECK(glUniform1i(shininess, SHININESS_FACTOR));
     GL_CHECK(
-        glUniform1i(
-            shininess,
-            SHININESS_FACTOR); // Der ambiente Faktor wird in das
-                               // Shader-Programm C<bertragen
-                               // GL_CHECK(glUniform3f(light_dir_access,
-                               // (GLfloat)lightDir[0], (GLfloat)lightDir[1],
-                               // (GLfloat)lightDir[2]));
-        GL_CHECK(glUniformMatrix4fv(matrix_access, 1, GL_FALSE,
-                                    glm::value_ptr(matrix))));
+        glUniformMatrix4fv(matrix_access, 1, GL_FALSE, glm::value_ptr(matrix)));
 
+    // Textur aktivieren und binden
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(textureId, 0);
     GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 36));
 
     glfwSwapBuffers(window);

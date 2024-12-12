@@ -10,9 +10,11 @@ out vec4 colorOfMyChoice;
 in vec3 outNormals;
 in vec3 fragPosition;
 in vec3 colorForFragmentShader;
+in vec2 uv;
 
 uniform vec3 lightPos = vec3(0.0, 0.0, 1.0);
 uniform vec3 cameraPosition = vec3(0.0, 0.0, 1.0);
+uniform sampler2D textureSampler;
 
 void main()
 {
@@ -22,5 +24,7 @@ void main()
     vec3 reflectDir = reflect(-lightDir, outNormals);
     float diffuse = (max(dot(outNormals, lightDir), 0.0)) * max(diffuseFactor, 0.0);
     float specular = pow(max(dot(viewDir, reflectDir), 0.0), max(shininessFactor, 1.0)) * max(specularFactor, 0.0);
-    colorOfMyChoice = vec4((ambientFactor + diffuse + specular) * colorForFragmentShader, 1.0);
+
+    vec4 txt = texture(textureSampler, uv);
+    colorOfMyChoice = txt; // vec4((ambientFactor + diffuse + specular) * colorForFragmentShader, 1.0);
 }
