@@ -15,6 +15,8 @@ float SPECULAR_FACTOR = 0.6f;
 int SHININESS_FACTOR = 16;
 
 #define PI 3.1415926536
+#define WIDTH 1024
+#define HEIGHT 768
 
 glm::vec3 lightDir{0, 0, 1};
 
@@ -69,9 +71,9 @@ static double X_POS, Y_POS;
 
 static void cursor_position_callback(GLFWwindow *window, double xpos,
                                      double ypos) {
-  std::cout << "Position: (" << xpos << ":" << ypos << ")" << std::endl;
-  X_POS = xpos;
-  Y_POS = ypos;
+  X_POS = (xpos / WIDTH * 2) - 1.0;
+  Y_POS = (ypos / HEIGHT * 2) - 1.0;
+  std::cout << "Position: (" << X_POS << ":" << Y_POS << ")" << std::endl;
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
@@ -202,7 +204,7 @@ int main() {
   vertices[4] = vertex(cubeEdges[2], leftside);
   vertices[5] = vertex(cubeEdges[0], leftside);
 
-  // Front des Dreiceck
+  // Front
   vertices[6] = vertex(cubeEdges[4], front);
   vertices[7] = vertex(cubeEdges[0], front);
   vertices[8] = vertex(cubeEdges[3], front);
@@ -252,7 +254,8 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow *window = glfwCreateWindow(1024, 768, "OpenGL Debug", NULL, NULL);
+  GLFWwindow *window =
+      glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Debug", NULL, NULL);
   if (window == NULL) {
     std::cerr << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
@@ -309,6 +312,7 @@ int main() {
   diffusion = glGetUniformLocation(complete_shader_program, "diffuseFactor");
   specular = glGetUniformLocation(complete_shader_program, "specularFactor");
   shininess = glGetUniformLocation(complete_shader_program, "shininessFactor");
+  light_dir_access = glGetUniformLocation(complete_shader_program, "lightPos");
 
   // Zugriff auf Position und Farbe innerhalb des Vertex-Buffers
   position_access = glGetAttribLocation(complete_shader_program, "position");
@@ -320,6 +324,9 @@ int main() {
   int picture_width, picture_height;
   auto const pictureData =
       loadBMP24("assets/Cube.bmp", &picture_width, &picture_height);
+
+  std::cout << "Width: " << picture_width << " Height: " << picture_height
+            << std::endl;
 
   glGenTextures(1, &texture);
   glActiveTexture(GL_TEXTURE0);
@@ -406,6 +413,7 @@ int main() {
     GL_CHECK(glUniform1i(shininess, SHININESS_FACTOR));
     GL_CHECK(
         glUniformMatrix4fv(matrix_access, 1, GL_FALSE, glm::value_ptr(matrix)));
+    glUniform3f(light_dir_access, X_POS, Y_POS, (1 - X_POS) / (1 - Y_POS));
 
     // Textur aktivieren und binden
     glActiveTexture(GL_TEXTURE0);
