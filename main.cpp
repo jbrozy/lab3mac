@@ -21,6 +21,8 @@ typedef struct vertex {
   float x, y, z;
   float r, g, b;
   float nx, ny, nz;
+  float u, v;
+
   vertex(vertex other, glm::vec3 norm) {
     x = other.x;
     y = other.y;
@@ -33,6 +35,23 @@ typedef struct vertex {
     nx = norm.x;
     ny = norm.y;
     nz = norm.z;
+
+    u = v = 0.0;
+  }
+  vertex(vertex other, glm::vec3 norm, glm::vec2 uv) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+
+    r = other.r;
+    g = other.g;
+    b = other.b;
+
+    nx = norm.x;
+    ny = norm.y;
+    nz = norm.z;
+    u = uv.x;
+    v = uv.y;
   }
   vertex(float x, float y, float z, float r, float g, float b) {
     this->x = x;
@@ -42,7 +61,7 @@ typedef struct vertex {
     this->g = g;
     this->b = b;
   }
-  vertex() { x = y = z = r = g = b = 0; }
+  vertex() { x = y = z = r = g = b = u = v = 0; }
 } Vertex;
 
 static double X_POS, Y_POS;
@@ -173,7 +192,7 @@ int main() {
   glm::vec3 bottom{0, -1, 0};
   glm::vec3 back{0, 0, -1};
 
-  // Left side first triangle
+  // Left side
 
   vertices[0] = vertex(cubeEdges[2], leftside);
   vertices[1] = vertex(cubeEdges[1], leftside);
