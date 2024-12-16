@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include "LadeBMP.h"
+#include "LadeObj.h"
 #include "shader.h"
 #include <chrono>
 #include <glm/glm.hpp>
@@ -41,18 +42,17 @@ typedef struct vertex {
 
     u = v = 0.0;
   }
+
+  // texture ctor
   vertex(vertex other, glm::vec3 norm, glm::vec2 uv) {
     x = other.x;
     y = other.y;
     z = other.z;
 
-    r = other.r;
-    g = other.g;
-    b = other.b;
-
     nx = norm.x;
     ny = norm.y;
     nz = norm.z;
+
     u = uv.x;
     v = uv.y;
   }
@@ -73,7 +73,7 @@ static void cursor_position_callback(GLFWwindow *window, double xpos,
                                      double ypos) {
   X_POS = (xpos / WIDTH * 2) - 1.0;
   Y_POS = (ypos / HEIGHT * 2) - 1.0;
-  std::cout << "Position: (" << X_POS << ":" << Y_POS << ")" << std::endl;
+  // std::cout << "Position: (" << X_POS << ":" << Y_POS << ")" << std::endl;
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
@@ -167,87 +167,95 @@ int main() {
     return 1;
   }
 
-  Vertex vertices[36]; // Array for vertices
-  Vertex cubeEdges[8]{
-      /*0*/ Vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 0.0f), // red
-      /*1*/ Vertex(+1.0f, +1.0f, -1.0f, 0.0f, 1.0f, 0.0f), // green
-      /*2*/ Vertex(+1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f), // blue
-      /*3*/ Vertex(+1.0f, -1.0f, +1.0f, 1.0f, 0.0f, 1.0f), // magenta
-      /*4*/ Vertex(-1.0f, +1.0f, +1.0f, 0.0f, 1.0f, 1.0f), // cyan
-      /*5*/ Vertex(-1.0f, -1.0f, +1.0f, 1.0f, 1.0f, 0.0f), // yellow
-      /*6*/ Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), // white
-      /*7*/ Vertex(-1.0f, +1.0f, -1.0f, 0.0f, 0.0f, 0.0f)  // black
-  };
-
-  // Scale cube coordinates
-  cubeEdges[0] = vertex(vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 0.0f),
-                        glm::vec3(1.0, 0.0, 0.0));
-  for (int i = 0; i < 8; i++) {
-    cubeEdges[i].x *= 0.5;
-    cubeEdges[i].y *= 0.5;
-    cubeEdges[i].z *= 0.5;
+  int model_vertices;
+  auto model = loadModel("assets/Plane.obj", &model_vertices);
+  float zoom = 0.17;
+  for (int i = 0; i < model_vertices; i++) {
+    model[i].x *= zoom;
+    model[i].y *= zoom;
+    model[i].z *= zoom;
   }
+  // Vertex vertices[36]; // Array for vertices
+  // Vertex cubeEdges[8]{
+  //     /*0*/ Vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 0.0f), // red
+  //     /*1*/ Vertex(+1.0f, +1.0f, -1.0f, 0.0f, 1.0f, 0.0f), // green
+  //     /*2*/ Vertex(+1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f), // blue
+  //     /*3*/ Vertex(+1.0f, -1.0f, +1.0f, 1.0f, 0.0f, 1.0f), // magenta
+  //     /*4*/ Vertex(-1.0f, +1.0f, +1.0f, 0.0f, 1.0f, 1.0f), // cyan
+  //     /*5*/ Vertex(-1.0f, -1.0f, +1.0f, 1.0f, 1.0f, 0.0f), // yellow
+  //     /*6*/ Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), // white
+  //     /*7*/ Vertex(-1.0f, +1.0f, -1.0f, 0.0f, 0.0f, 0.0f)  // black
+  // };
 
-  glm::vec3 leftside{1, 0, 0};
-  glm::vec3 rightside{-1, 0, 0};
-  glm::vec3 front{0, 0, 1};
-  glm::vec3 top{0, 1, 0};
-  glm::vec3 bottom{0, -1, 0};
-  glm::vec3 back{0, 0, -1};
+  // // Scale cube coordinates
+  // cubeEdges[0] = vertex(vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 0.0f),
+  //                       glm::vec3(1.0, 0.0, 0.0));
+  // for (int i = 0; i < 8; i++) {
+  //   cubeEdges[i].x *= 0.5;
+  //   cubeEdges[i].y *= 0.5;
+  //   cubeEdges[i].z *= 0.5;
+  // }
 
-  // Left side
-  vertices[0] = vertex(cubeEdges[2], leftside);
-  vertices[1] = vertex(cubeEdges[1], leftside);
-  vertices[2] = vertex(cubeEdges[0], leftside);
+  // glm::vec3 leftside{1, 0, 0};
+  // glm::vec3 rightside{-1, 0, 0};
+  // glm::vec3 front{0, 0, 1};
+  // glm::vec3 top{0, 1, 0};
+  // glm::vec3 bottom{0, -1, 0};
+  // glm::vec3 back{0, 0, -1};
 
-  vertices[3] = vertex(cubeEdges[3], leftside);
-  vertices[4] = vertex(cubeEdges[2], leftside);
-  vertices[5] = vertex(cubeEdges[0], leftside);
+  // // Left side
+  // vertices[0] = vertex(cubeEdges[2], leftside, glm::vec2(0.75, 0.25));
+  // vertices[1] = vertex(cubeEdges[1], leftside, glm::vec2(0.75, 0.5));
+  // vertices[2] = vertex(cubeEdges[0], leftside, glm::vec2(0.5, 0.5));
 
-  // Front
-  vertices[6] = vertex(cubeEdges[4], front);
-  vertices[7] = vertex(cubeEdges[0], front);
-  vertices[8] = vertex(cubeEdges[3], front);
+  // vertices[3] = vertex(cubeEdges[3], leftside, glm::vec2(0.5, 0.25));
+  // vertices[4] = vertex(cubeEdges[2], leftside, glm::vec2(0.75, 0.25));
+  // vertices[5] = vertex(cubeEdges[0], leftside, glm::vec2(0.5, 0.5));
 
-  vertices[9] = vertex(cubeEdges[3], front);
-  vertices[10] = vertex(cubeEdges[4], front);
-  vertices[11] = vertex(cubeEdges[5], front);
+  // // Front
+  // vertices[6] = vertex(cubeEdges[4], front, glm::vec2(0.25, 0.5));
+  // vertices[7] = vertex(cubeEdges[0], front, glm::vec2(0.5, 0.5));
+  // vertices[8] = vertex(cubeEdges[3], front, glm::vec2(0.5, 0.25));
 
-  // top side
-  vertices[12] = vertex(cubeEdges[4], top);
-  vertices[13] = vertex(cubeEdges[0], top);
-  vertices[14] = vertex(cubeEdges[1], top);
+  // vertices[9] = vertex(cubeEdges[3], front, glm::vec2(0.5, 0.25));
+  // vertices[10] = vertex(cubeEdges[4], front, glm::vec2(0.25, 0.5));
+  // vertices[11] = vertex(cubeEdges[5], front, glm::vec2(0.25, 0.25));
 
-  vertices[15] = vertex(cubeEdges[4], top);
-  vertices[16] = vertex(cubeEdges[7], top);
-  vertices[17] = vertex(cubeEdges[1], top);
+  // // top side
+  // vertices[12] = vertex(cubeEdges[4], top, glm::vec2(0.25, 0.5));
+  // vertices[13] = vertex(cubeEdges[0], top, glm::vec2(0.5, 0.5));
+  // vertices[14] = vertex(cubeEdges[1], top, glm::vec2(0.5, 0.75));
 
-  // back
-  vertices[18] = vertex(cubeEdges[2], back);
-  vertices[19] = vertex(cubeEdges[6], back);
-  vertices[20] = vertex(cubeEdges[1], back);
+  // vertices[15] = vertex(cubeEdges[4], top, glm::vec2(0.25, 0.5));
+  // vertices[16] = vertex(cubeEdges[7], top, glm::vec2(0.25, 0.75));
+  // vertices[17] = vertex(cubeEdges[1], top, glm::vec2(0.5, 0.75));
 
-  vertices[21] = vertex(cubeEdges[6], back);
-  vertices[22] = vertex(cubeEdges[7], back);
-  vertices[23] = vertex(cubeEdges[1], back);
+  // // back
+  // vertices[18] = vertex(cubeEdges[2], back, glm::vec2(0.5, 0.75));
+  // vertices[19] = vertex(cubeEdges[6], back, glm::vec2(0.25, 0.75));
+  // vertices[20] = vertex(cubeEdges[1], back, glm::vec2(0.5, 1));
 
-  // right side
-  vertices[24] = vertex(cubeEdges[6], rightside);
-  vertices[25] = vertex(cubeEdges[5], rightside);
-  vertices[26] = vertex(cubeEdges[4], rightside);
+  // vertices[21] = vertex(cubeEdges[6], back, glm::vec2(0.25, 0.75));
+  // vertices[22] = vertex(cubeEdges[7], back, glm::vec2(0.25, 1));
+  // vertices[23] = vertex(cubeEdges[1], back, glm::vec2(0.5, 1));
 
-  vertices[27] = vertex(cubeEdges[6], rightside);
-  vertices[28] = vertex(cubeEdges[4], rightside);
-  vertices[29] = vertex(cubeEdges[7], rightside);
+  // // right side
+  // vertices[24] = vertex(cubeEdges[6], rightside, glm::vec2(0, 0.25));
+  // vertices[25] = vertex(cubeEdges[5], rightside, glm::vec2(0.25, 0.25));
+  // vertices[26] = vertex(cubeEdges[4], rightside, glm::vec2(0.25, 0.5));
 
-  // bottom side
-  vertices[30] = vertex(cubeEdges[5], bottom);
-  vertices[31] = vertex(cubeEdges[3], bottom);
-  vertices[32] = vertex(cubeEdges[2], bottom);
+  // vertices[27] = vertex(cubeEdges[6], rightside, glm::vec2(0, 0.25));
+  // vertices[28] = vertex(cubeEdges[4], rightside, glm::vec2(0.25, 0.5));
+  // vertices[29] = vertex(cubeEdges[7], rightside, glm::vec2(0, 0.5));
 
-  vertices[33] = vertex(cubeEdges[5], bottom);
-  vertices[34] = vertex(cubeEdges[2], bottom);
-  vertices[35] = vertex(cubeEdges[6], bottom);
+  // // bottom side
+  // vertices[30] = vertex(cubeEdges[5], bottom, glm::vec2(0.25, 0.25));
+  // vertices[31] = vertex(cubeEdges[3], bottom, glm::vec2(0.5, 0.25));
+  // vertices[32] = vertex(cubeEdges[2], bottom, glm::vec2(0.5, 0));
+
+  // vertices[33] = vertex(cubeEdges[5], bottom, glm::vec2(0.25, 0.25));
+  // vertices[34] = vertex(cubeEdges[2], bottom, glm::vec2(0.5, 0));
+  // vertices[35] = vertex(cubeEdges[6], bottom, glm::vec2(0.25, 0));
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -299,7 +307,8 @@ int main() {
   // Aufbau und Cbermittlung des Vertex-Buffers
   glGenBuffers(1, &vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(myVertexType) * model_vertices, model,
+               GL_STATIC_DRAW);
 
   // Fügen Sie vor dem Buffer-Setup hinzu:
   GLuint vao;
@@ -323,7 +332,7 @@ int main() {
   GLuint texture;
   int picture_width, picture_height;
   auto const pictureData =
-      loadBMP24("assets/Cube.bmp", &picture_width, &picture_height);
+      loadBMP24("assets/Plane.bmp", &picture_width, &picture_height);
 
   std::cout << "Width: " << picture_width << " Height: " << picture_height
             << std::endl;
@@ -333,47 +342,27 @@ int main() {
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, picture_width, picture_height, 0,
                GL_BGR, GL_UNSIGNED_BYTE, pictureData);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  // glGenerateMipmap(GL_TEXTURE_2D);
 
   delete[] pictureData;
   glGenerateMipmap(GL_TEXTURE_2D);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   GLuint textureId =
       glGetUniformLocation(complete_shader_program, "textureSampler");
 
   // Die Daten fC<r Position und Farbe werden dem Shader mitgeteilt
+  // Dann die Vertex Attribute setzen
   glEnableVertexAttribArray(position_access);
-  glVertexAttribPointer(position_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                        (void *)0);
-
-  glEnableVertexAttribArray(color_access);
-  glVertexAttribPointer(color_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                        (void *)(sizeof(float) * 3));
+  glVertexAttribPointer(position_access, 3, GL_FLOAT, GL_FALSE,
+                        sizeof(myVertexType), (void *)0);
 
   glEnableVertexAttribArray(normal_access);
-  glVertexAttribPointer(normal_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                        (void *)(sizeof(float) * 6));
+  glVertexAttribPointer(normal_access, 3, GL_FLOAT, GL_FALSE,
+                        sizeof(myVertexType), (void *)(sizeof(float) * 3));
 
   glEnableVertexAttribArray(uv_access);
-  glVertexAttribPointer(uv_access, 2, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                        (void *)(sizeof(float) * 9));
-
-  // Aufbau und Cbermittlung des Vertex-Buffers
-  glGenBuffers(1, &vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  // Die Daten fC<r Position und Farbe werden dem Shader mitgeteilt
-  glEnableVertexAttribArray(position_access);
-  glVertexAttribPointer(position_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                        (void *)0);
-
-  glEnableVertexAttribArray(color_access);
-  glVertexAttribPointer(color_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                        (void *)(sizeof(float) * 3));
-
-  glEnableVertexAttribArray(normal_access);
-  glVertexAttribPointer(normal_access, 3, GL_FLOAT, GL_FALSE, sizeof(vertex),
+  glVertexAttribPointer(uv_access, 2, GL_FLOAT, GL_FALSE, sizeof(myVertexType),
                         (void *)(sizeof(float) * 6));
 
   // Z-Achse positiv defineren
@@ -386,10 +375,10 @@ int main() {
   using clock = std::chrono::high_resolution_clock;
   auto previousTime = clock::now();
   glfwSetCursorPosCallback(window, cursor_position_callback);
-
   glUseProgram(complete_shader_program);
   // Main render loop
   while (!glfwWindowShouldClose(window)) {
+    glClearColor(0.39, 0.4, 0.8, 1.0);
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     auto currentTime = clock::now();
     std::chrono::duration<float> deltaTime = currentTime - previousTime;
@@ -399,7 +388,7 @@ int main() {
     glm::mat4 matrix{1.0};
     matrix = glm::rotate(
         matrix, (float)glfwGetTime(),
-        glm::vec3(0, 1, 1)); // where x, y, z is axis of rotation (e.g. 0 1 0)
+        glm::vec3(1, 1, 1)); // where x, y, z is axis of rotation (e.g. 0 1 0)
 
     GL_CHECK(glUniform1f(ambient,
                          AMBIENT_FACTOR)); // Der ambiente Faktor wird in das
@@ -419,7 +408,7 @@ int main() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glUniform1i(textureId, 0);
-    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 36));
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, model_vertices));
 
     glfwSwapBuffers(window);
     glfwPollEvents();

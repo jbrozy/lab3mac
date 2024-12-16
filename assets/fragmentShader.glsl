@@ -11,6 +11,7 @@ in vec3 outNormals;
 in vec3 fragPosition;
 in vec3 colorForFragmentShader;
 in vec2 uv;
+in vec3 lightDir;
 
 uniform vec3 lightPos;
 uniform vec3 cameraPosition = vec3(0.0, 0.0, 1.0);
@@ -26,5 +27,5 @@ void main()
     float specular = pow(max(dot(viewDir, reflectDir), 0.0), max(shininessFactor, 1.0)) * max(specularFactor, 0.0);
 
     vec4 txt = texture(textureSampler, uv);
-    colorOfMyChoice = vec4((ambientFactor + diffuse + specular) * colorForFragmentShader, 1.0);
+    colorOfMyChoice = vec4((ambientFactor + diffuse + specular) * txt.xyz, 1.0);
 }

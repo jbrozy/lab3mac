@@ -8,7 +8,6 @@ in vec3 position;
 in vec3 normals;
 in vec2 texCoords;
 
-out vec3 colorForFragmentShader;
 out vec3 outNormals;
 
 out vec3 fragPosition;
@@ -21,7 +20,6 @@ void main()
     fragPosition = (matrix * vec4(position, 1.0)).xyz;
     uv = texCoords;
 
-    colorForFragmentShader = color;
     outNormals = (matrix * vec4(normals, 1.0)).xyz;
     lightDirection = (matrix * vec4(lightDir, 1.0)).xyz;
 }
